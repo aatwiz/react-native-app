@@ -4,6 +4,8 @@ import {
   FlatList,
   StyleSheet,
   ListRenderItemInfo,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { colors, spacing } from "../theme";
 import { useChat } from "../context/ChatContext";
@@ -37,7 +39,11 @@ export default function ChatScreen() {
   const keyExtractor = useCallback((item: Message) => item.id, []);
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+    >
       {messages.length === 0 && !isBotTyping ? (
         <EmptyChat />
       ) : (
@@ -52,10 +58,12 @@ export default function ChatScreen() {
             flatListRef.current?.scrollToEnd({ animated: true })
           }
           ListFooterComponent={isBotTyping ? <TypingIndicator /> : null}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
         />
       )}
       <ChatInput onSend={handleSend} disabled={isBotTyping} />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

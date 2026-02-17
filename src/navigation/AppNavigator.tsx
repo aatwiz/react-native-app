@@ -14,7 +14,7 @@ function ChatHeader({
 }: {
   navigation: any;
 }) {
-  const { activeChat, createNewChat } = useChat();
+  const { activeChat } = useChat();
   const insets = useSafeAreaInsets();
 
   return (
@@ -37,14 +37,8 @@ function ChatHeader({
         {activeChat ? activeChat.title : "Ask AIP"}
       </Text>
 
-      {/* New chat button */}
-      <TouchableOpacity
-        style={styles.headerButton}
-        onPress={createNewChat}
-        activeOpacity={0.7}
-      >
-        <Text style={styles.newChatIcon}>+</Text>
-      </TouchableOpacity>
+      {/* Spacer to keep title centred */}
+      <View style={styles.headerButton} />
     </View>
   );
 }
@@ -107,10 +101,5 @@ const styles = StyleSheet.create({
     height: 2,
     backgroundColor: colors.textPrimary,
     borderRadius: 1,
-  },
-  newChatIcon: {
-    fontSize: typography.fontSize.xxl,
-    color: colors.primary,
-    fontWeight: "300",
   },
 });

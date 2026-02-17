@@ -5,8 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
-  KeyboardAvoidingView,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, spacing, borderRadius, typography } from "../theme";
 
 interface Props {
@@ -16,6 +16,7 @@ interface Props {
 
 export default function ChatInput({ onSend, disabled }: Props) {
   const [text, setText] = useState("");
+  const insets = useSafeAreaInsets();
 
   const handleSend = () => {
     const trimmed = text.trim();
@@ -25,12 +26,8 @@ export default function ChatInput({ onSend, disabled }: Props) {
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-    >
-      <View style={styles.container}>
-        <View style={styles.inputRow}>
+    <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, spacing.md) }]}>
+      <View style={styles.inputRow}>
           <TextInput
             style={styles.input}
             value={text}
@@ -54,9 +51,8 @@ export default function ChatInput({ onSend, disabled }: Props) {
           >
             <SendIcon />
           </TouchableOpacity>
-        </View>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -72,39 +68,39 @@ function SendIcon() {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: spacing.screenPadding,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.xs,
     backgroundColor: colors.background,
     borderTopWidth: 1,
     borderTopColor: colors.divider,
   },
   inputRow: {
     flexDirection: "row",
-    alignItems: "flex-end",
+    alignItems: "center",
     backgroundColor: colors.inputBackground,
     borderRadius: borderRadius.xl,
     borderWidth: 1,
     borderColor: colors.inputBorder,
-    paddingLeft: spacing.lg,
-    paddingRight: spacing.sm,
-    paddingVertical: Platform.OS === "ios" ? spacing.md : spacing.sm,
-    minHeight: 48,
-    maxHeight: 120,
+    paddingLeft: spacing.md,
+    paddingRight: spacing.xs,
+    paddingVertical: Platform.OS === "ios" ? 4 : 2,
+    minHeight: 36,
+    maxHeight: 90,
   },
   input: {
     flex: 1,
-    fontSize: typography.fontSize.md,
+    fontSize: typography.fontSize.sm,
     color: colors.textPrimary,
     paddingVertical: 0,
-    lineHeight: typography.fontSize.md * typography.lineHeight.normal,
+    lineHeight: typography.fontSize.sm * typography.lineHeight.normal,
   },
   sendButton: {
-    width: 36,
-    height: 36,
+    width: 30,
+    height: 30,
     borderRadius: borderRadius.full,
     backgroundColor: colors.primary,
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: spacing.sm,
+    marginLeft: spacing.xs,
   },
   sendButtonDisabled: {
     backgroundColor: colors.inputBorder,

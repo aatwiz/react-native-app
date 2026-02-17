@@ -1,26 +1,49 @@
 /**
- * Mock API layer.
+ * Chat API layer.
  *
- * Simulates backend responses with realistic delays.
- * When the real backend is available, replace these functions with
- * actual fetch/axios calls — the signatures stay the same.
+ * Talks to the Express mock server. Falls back to inline mocks
+ * if the server is unreachable (offline development).
  */
 
 import { Chat, Message, SendMessageResponse } from "../types";
 import { generateId } from "../utils";
 
 /* ------------------------------------------------------------------ */
-/*  Simulated latency                                                 */
+/*  Server base URL                                                   */
+/* ------------------------------------------------------------------ */
+const API_BASE = "http://localhost:3000"; // Mock server
+
+/* ------------------------------------------------------------------ */
+/*  Helper — fetch with fallback                                      */
+/* ------------------------------------------------------------------ */
+async function apiFetch<T>(
+  url: string,
+  options?: RequestInit,
+  fallback?: () => Promise<T>
+): Promise<T> {
+  try {
+    const res = await fetch(url, {
+      ...options,
+      headers: { "Content-Type": "application/json", ...options?.headers },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    // 204 No Content
+    if (res.status === 204) return undefined as unknown as T;
+    return res.json();
+  } catch {
+    if (fallback) return fallback();
+    throw new Error("Server unreachable and no fallback provided");
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Offline-mode mock helpers                                         */
 /* ------------------------------------------------------------------ */
 const SIMULATED_DELAY_MS = 1_200;
-
 function delay(ms: number = SIMULATED_DELAY_MS): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/* ------------------------------------------------------------------ */
-/*  Mock bot responses                                                */
-/* ------------------------------------------------------------------ */
 const BOT_RESPONSES: string[] = [
   "Based on the relevant trademark laws, I can provide you with the following guidance on this matter.",
   "That's a great question. In the context of intellectual property law, there are several important considerations to keep in mind.",
@@ -43,43 +66,54 @@ export async function sendMessage(
   chatId: string,
   content: string
 ): Promise<SendMessageResponse> {
-  await delay();
-
-  const botMessage: Message = {
-    id: generateId(),
-    chatId,
-    role: "assistant",
-    content: pickBotResponse(),
-    createdAt: new Date().toISOString(),
-  };
-
-  return { message: botMessage };
+  return apiFetch<SendMessageResponse>(
+    `${API_BASE}/chats/${chatId}/messages`,
+    { method: "POST", body: JSON.stringify({ content }) },
+    // Fallback: local mock
+    async () => {
+      await delay();
+      const botMessage: Message = {
+        id: generateId(),
+        chatId,
+        role: "assistant",
+        content: pickBotResponse(),
+        createdAt: new Date().toISOString(),
+      };
+      return { message: botMessage };
+    }
+  );
 }
 
 /** Create a new chat and return it. */
 export async function createChat(): Promise<Chat> {
-  await delay(300);
-
-  const now = new Date().toISOString();
-  return {
-    id: generateId(),
-    title: "New Chat",
-    createdAt: now,
-    updatedAt: now,
-    messages: [],
-  };
+  return apiFetch<Chat>(
+    `${API_BASE}/chats`,
+    { method: "POST" },
+    async () => {
+      await delay(300);
+      const now = new Date().toISOString();
+      return { id: generateId(), title: "New Chat", createdAt: now, updatedAt: now, messages: [] };
+    }
+  );
 }
 
 /** Fetch all chats for the current user (history). */
 export async function fetchChats(): Promise<Chat[]> {
-  // In production this would be an API call.
-  // The cache layer provides offline data; this is just a fallback.
-  await delay(200);
-  return [];
+  return apiFetch<Chat[]>(
+    `${API_BASE}/chats`,
+    { method: "GET" },
+    async () => {
+      await delay(200);
+      return [];
+    }
+  );
 }
 
 /** Fetch a single chat by ID. */
 export async function fetchChat(chatId: string): Promise<Chat | null> {
-  await delay(200);
-  return null;
+  return apiFetch<Chat | null>(
+    `${API_BASE}/chats/${chatId}`,
+    { method: "GET" },
+    async () => null
+  );
 }

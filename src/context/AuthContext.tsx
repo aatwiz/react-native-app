@@ -42,6 +42,7 @@ interface AuthState {
   isAuthenticated: boolean;
   login: () => Promise<void>;
   logout: () => Promise<void>;
+  mockLogin: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState>({
@@ -53,6 +54,7 @@ const AuthContext = createContext<AuthState>({
   isAuthenticated: false,
   login: async () => {},
   logout: async () => {},
+  mockLogin: async () => {},
 });
 
 /* ------------------------------------------------------------------ */
@@ -189,6 +191,20 @@ export function AuthProvider({ children }: PropsWithChildren) {
     await promptAsync();
   }, [request, promptAsync, discovery, redirectUri]);
 
+  /* ---- Mock login (dev / demo) ---- */
+  const mockLogin = useCallback(async (email: string) => {
+    const fakeToken = "mock-access-token";
+    const fakeUser: UserInfo = {
+      sub: "mock-user-id",
+      preferred_username: email.split("@")[0],
+      email,
+      name: email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+    };
+    setAccessToken(fakeToken);
+    setUserInfo(fakeUser);
+    await SecureStore.setItemAsync(STORE_KEY_ACCESS, fakeToken);
+  }, []);
+
   /* ---- Logout ---- */
   const logout = useCallback(async () => {
     // RP-initiated logout (opens browser and redirects back)
@@ -218,6 +234,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         isAuthenticated: !!accessToken,
         login,
         logout,
+        mockLogin,
       }}
     >
       {children}

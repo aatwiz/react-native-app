@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { colors, typography, spacing, borderRadius } from "../theme";
 import { Message } from "../types";
+import AipLogo from "./AipLogo";
 
 interface Props {
   message: Message;
@@ -19,7 +20,7 @@ export default function ChatBubble({ message }: Props) {
     >
       {!isUser && (
         <View style={styles.avatarContainer}>
-          <Text style={styles.avatarText}>AiP</Text>
+          <AipLogo width={22} height={18} />
         </View>
       )}
       <View
@@ -57,16 +58,13 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.divider,
     justifyContent: "center",
     alignItems: "center",
     marginRight: spacing.sm,
     marginTop: spacing.xs,
-  },
-  avatarText: {
-    color: colors.textOnPrimary,
-    fontSize: typography.fontSize.xs,
-    fontWeight: "700",
   },
   bubble: {
     maxWidth: "78%",

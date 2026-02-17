@@ -1,18 +1,52 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { colors, typography, spacing } from "../theme";
+import AipLogo from "./AipLogo";
+
+const GREETING = "How may I help?";
 
 /** Shown when a new chat is opened and no messages exist yet. */
 export default function EmptyChat() {
+  const [displayedText, setDisplayedText] = useState("");
+  const [cursorVisible, setCursorVisible] = useState(true);
+  const [doneTyping, setDoneTyping] = useState(false);
+  const indexRef = useRef(0);
+
+  // Typewriter effect
+  useEffect(() => {
+    indexRef.current = 0;
+    setDisplayedText("");
+    setDoneTyping(false);
+
+    const interval = setInterval(() => {
+      indexRef.current += 1;
+      if (indexRef.current > GREETING.length) {
+        clearInterval(interval);
+        setDoneTyping(true);
+        return;
+      }
+      setDisplayedText(GREETING.slice(0, indexRef.current));
+    }, 70);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Blinking cursor
+  useEffect(() => {
+    const blink = setInterval(() => {
+      setCursorVisible((v) => !v);
+    }, 530);
+    return () => clearInterval(blink);
+  }, []);
+
   return (
     <View style={styles.container}>
       <View style={styles.logoContainer}>
-        <Text style={styles.logoText}>AiP</Text>
+        <AipLogo width={72} height={59} />
       </View>
-      <Text style={styles.title}>Ask AIP</Text>
-      <Text style={styles.subtitle}>
-        Your AI-powered IP consulting assistant.{"\n"}
-        Ask me anything about intellectual property.
+      <Text style={styles.title}>
+        {displayedText}
+        <Text style={[styles.cursor, !cursorVisible && styles.cursorHidden]}>|</Text>
       </Text>
     </View>
   );
@@ -26,29 +60,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xxxl,
   },
   logoContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 16,
-    backgroundColor: colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
     marginBottom: spacing.lg,
-  },
-  logoText: {
-    color: colors.textOnPrimary,
-    fontSize: typography.fontSize.xl,
-    fontWeight: "700",
   },
   title: {
     fontSize: typography.fontSize.xxl,
     fontWeight: "700",
     color: colors.textPrimary,
-    marginBottom: spacing.sm,
   },
-  subtitle: {
-    fontSize: typography.fontSize.md,
-    color: colors.textSecondary,
-    textAlign: "center",
-    lineHeight: typography.fontSize.md * typography.lineHeight.relaxed,
+  cursor: {
+    color: colors.primary,
+    fontWeight: "300",
+  },
+  cursorHidden: {
+    opacity: 0,
   },
 });
