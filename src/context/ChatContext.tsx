@@ -10,6 +10,7 @@ import { Chat, Message } from "../types";
 import { generateId } from "../utils";
 import * as api from "../api";
 import * as cache from "../cache";
+import { useAuth } from "./AuthContext";
 
 /* ------------------------------------------------------------------ */
 /*  Context types                                                     */
@@ -48,6 +49,7 @@ const ChatContext = createContext<ChatState>({
 /*  Provider                                                          */
 /* ------------------------------------------------------------------ */
 export function ChatProvider({ children }: PropsWithChildren) {
+  const { isAuthenticated } = useAuth();
   const [chats, setChats] = useState<Chat[]>([]);
   const [activeChat, setActiveChatState] = useState<Chat | null>(null);
   const [isBotTyping, setIsBotTyping] = useState(false);
@@ -59,6 +61,13 @@ export function ChatProvider({ children }: PropsWithChildren) {
       setChats(cached);
     })();
   }, []);
+
+  /* ---- Reset to fresh chat on new login ---- */
+  useEffect(() => {
+    if (isAuthenticated) {
+      setActiveChatState(null);
+    }
+  }, [isAuthenticated]);
 
   /* ---- Create new chat ---- */
   const createNewChat = useCallback(async () => {
